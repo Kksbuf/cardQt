@@ -1,0 +1,50 @@
+s10x5y1 s10x5y2 s10x5y3
+s10x4y1 s10x4y2 s10x4y3
+s10x3y1 s10x3y2 s10x3y3
+s10x2y1 s10x2y2 s10x2y3
+s10x1y1 s10x1y2 s10x1y3
+s9x5y1 s9x5y2 s9x5y3
+s9x4y1 s9x4y2 s9x4y3
+s9x3y1 s9x3y2 s9x3y3
+s9x2y1 s9x2y2 s9x2y3
+s9x1y1 s9x1y2 s9x1y3
+s8x5y1 s8x5y2 s8x5y3
+s8x4y1 s8x4y2 s8x4y3
+s8x3y1 s8x3y2 s8x3y3
+s8x2y1 s8x2y2 s8x2y3
+s8x1y1 s8x1y2 s8x1y3
+s7x5y1 s7x5y2 s7x5y3
+s7x4y1 s7x4y2 s7x4y3
+s7x3y1 s7x3y2 s7x3y3
+s7x2y1 s7x2y2 s7x2y3
+s7x1y1 s7x1y2 s7x1y3
+s6x5y1 s6x5y2 s6x5y3
+s6x4y1 s6x4y2 s6x4y3
+s6x3y1 s6x3y2 s6x3y3
+s6x2y1 s6x2y2 s6x2y3
+s6x1y1 s6x1y2 s6x1y3
+s5x5y1 s5x5y2 s5x5y3
+s5x4y1 s5x4y2 s5x4y3
+s5x3y1 s5x3y2 s5x3y3
+s5x2y1 s5x2y2 s5x2y3
+s5x1y1 s5x1y2 s5x1y3
+s4x5y1 s4x5y2 s4x5y3
+s4x4y1 s4x4y2 s4x4y3
+s4x3y1 s4x3y2 s4x3y3
+s4x2y1 s4x2y2 s4x2y3
+s4x1y1 s4x1y2 s4x1y3
+s3x5y1 s3x5y2 s3x5y3
+s3x4y1 s3x4y2 s3x4y3
+s3x3y1 s3x3y2 s3x3y3
+s3x2y1 s3x2y2 s3x2y3
+s3x1y1 s3x1y2 s3x1y3
+s2x5y1 s2x5y2 s2x5y3 s12x5y1 s12x5y2 s12x5y3
+s2x4y1 s2x4y2 s2x4y3 s12x4y1 s12x4y2 s12x4y3
+s2x3y1 s2x3y2 s2x3y3 s12x3y1 s12x3y2 s12x3y3
+s2x2y1 s2x2y2 s2x2y3 s12x2y1 s12x2y2 s12x2y3
+s2x1y1 s2x1y2 s2x1y3 s12x1y1 s12x1y2 s12x1y3
+s1x5y1 s1x5y2 s1x5y3 s11x5y1 s11x5y2 s11x5y3
+s1x4y1 s1x4y2 s1x4y3 s11x4y1 s11x4y2 s11x4y3
+s1x3y1 s1x3y2 s1x3y3 s11x3y1 s11x3y2 s11x3y3
+s1x2y1 s1x2y2 s1x2y3 s11x2y1 s11x2y2 s11x2y3
+s1x1y1 s1x1y2 s1x1y3 s11x1y1 s11x1y2 s11x1y3

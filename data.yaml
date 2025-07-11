@@ -1,0 +1,15 @@
+names:
+- damage
+- edge
+- mark
+- oil
+nc: 4
+roboflow:
+  license: CC BY 4.0
+  project: plycard
+  url: https://universe.roboflow.com/kks-sximb/plycard/dataset/1
+  version: 1
+  workspace: kks-sximb
+test: ../test/images
+train: plycard-1/train/images
+val: plycard-1/valid/images
