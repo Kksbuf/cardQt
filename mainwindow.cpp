@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "dimensionsdialog.h"
 #include "capturesettingsdialog.h"
-#include "capturewindow.h"
+#include "motorizedcapturewindow.h"
 #include "imagestitcher.h"
 #include "cuttingconfigdialog.h"
 #include "cuttingwindow.h"
@@ -647,11 +647,9 @@ void MainWindow::saveDimensions()
 
 void MainWindow::loadDimensions()
 {
-    // Set default values
-    dimensions = {420.0, 297.0, 140.0, 99.0};
-
-    // Try to load saved values
-    QFile file(sessionPath + "/dimensions.json");
+    QString dimensionsFile = QString("%1/dimensions.json").arg(sessionPath);
+    QFile file(dimensionsFile);
+    
     if (file.open(QIODevice::ReadOnly))
     {
         QByteArray data = file.readAll();
@@ -669,28 +667,37 @@ void MainWindow::loadDimensions()
     }
     else
     {
-        // Show dimensions dialog for new sessions
-        DimensionsDialog dialog(this);
-        if (dialog.exec() == QDialog::Accepted)
-        {
-            dimensions.actualWidth = dialog.getActualWidth();
-            dimensions.actualHeight = dialog.getActualHeight();
-            dimensions.capturedWidth = dialog.getCapturedWidth();
-            dimensions.capturedHeight = dialog.getCapturedHeight();
-            saveDimensions();
-        }
+        // Use default dimensions instead of showing dialog
+        dimensions.actualWidth = 420.0;    // Default actual width in mm (A3 width)
+        dimensions.actualHeight = 297.0;   // Default actual height in mm (A3 height)
+        dimensions.capturedWidth = 140.0;  // Default captured width in mm
+        dimensions.capturedHeight = 99.0;  // Default captured height in mm
+        saveDimensions();
     }
 }
 
 void MainWindow::onAddNewSurface()
 {
-    CaptureSettingsDialog settingsDialog(this);
+    // Use MotorizedCaptureSettingsDialog instead of CaptureSettingsDialog
+    MotorizedCaptureSettingsDialog settingsDialog(this);
     if (settingsDialog.exec() == QDialog::Accepted)
     {
         // Store the capture settings
         currentCaptureSettings.imagesInX = settingsDialog.getImagesInX();
         currentCaptureSettings.imagesInY = settingsDialog.getImagesInY();
         currentCaptureSettings.sequence = settingsDialog.getCaptureSequence();
+
+        // Update dimensions based on paper size
+        QString paperSize = settingsDialog.getPaperSize();
+        bool isA4 = paperSize.contains("A4");
+        if (isA4) {
+            dimensions.actualWidth = 297.0;
+            dimensions.actualHeight = 210.0;
+        } else { // A5
+            dimensions.actualWidth = 210.0;
+            dimensions.actualHeight = 148.0;
+        }
+        saveDimensions();
 
         // Create a new surface directory
         int surfaceNumber = surfaceTree->topLevelItemCount() + 1;
@@ -726,111 +733,26 @@ void MainWindow::onAddNewSurface()
         }
 
         // Connect the file watcher with debounce timer
-        connect(defectWatcher, &QFileSystemWatcher::directoryChanged, this, 
-            [this, surfacePath]() {
-                static QTimer *debounceTimer = nullptr;
-                if (debounceTimer) {
-                    debounceTimer->stop();
-                    delete debounceTimer;
-                }
-                debounceTimer = new QTimer(this);
-                debounceTimer->setSingleShot(true);
-                debounceTimer->setInterval(500);  // 500ms delay
-                
-                // Create a new updateDefectView lambda for this timer
-                auto updateDefectView = [this, surfacePath]() {
-                    QString labeledImagePath = QString("%1/stitched_labeled.jpg").arg(surfacePath);
-                    QString coordPath = QString("%1/defect_coordinates.json").arg(surfacePath);
-                    
-                    // Update UI if this surface is currently selected
-                    QTreeWidgetItem *currentItem = surfaceTree->currentItem();
-                    if (currentItem && isSurfaceItem(currentItem) && 
-                        QString("%1/%2").arg(sessionPath).arg(currentItem->text(0)) == surfacePath) {
-                        
-                        if (QFile::exists(labeledImagePath)) {
-                            QPixmap labeledPixmap(labeledImagePath);
-                            if (!labeledPixmap.isNull()) {
-                                defectImageLabel->setPixmap(labeledPixmap.scaled(defectImageLabel->size(),
-                                    Qt::KeepAspectRatio, Qt::SmoothTransformation));
-                                
-                                // Update defect details from JSON
-                                QFile coordFile(coordPath);
-                                if (coordFile.open(QIODevice::ReadOnly)) {
-                                    QJsonDocument doc = QJsonDocument::fromJson(coordFile.readAll());
-                                    QJsonObject mainObj = doc.object();
-                                    QJsonArray defects = mainObj["defects"].toArray();
-                                    
-                                    defectTable->setRowCount(defects.size());
-                                    for (int i = 0; i < defects.size(); ++i) {
-                                        QJsonObject defect = defects[i].toObject();
-                                        
-                                        // Number
-                                        QTableWidgetItem *numberItem = new QTableWidgetItem(QString::number(i + 1));
-                                        numberItem->setTextAlignment(Qt::AlignCenter);
-                                        defectTable->setItem(i, 0, numberItem);
-
-                                        // Type
-                                        QTableWidgetItem *typeItem = new QTableWidgetItem(defect["type"].toString());
-                                        typeItem->setTextAlignment(Qt::AlignCenter);
-                                        defectTable->setItem(i, 1, typeItem);
-
-                                        // Confidence
-                                        double confidence = defect["confidence"].toDouble();
-                                        if (confidence > 1) {
-                                            confidence = confidence / 100.0;
-                                        }
-                                        QTableWidgetItem *confItem = new QTableWidgetItem(
-                                            QString("%1%").arg(confidence * 100, 0, 'f', 1));
-                                        confItem->setTextAlignment(Qt::AlignCenter);
-                                        defectTable->setItem(i, 2, confItem);
-
-                                        // For surface groups, we have physical_position object
-                                        QJsonObject physicalPos = defect["physical_position"].toObject();
-                                        
-                                        // Location (x, y) in mm
-                                        QString location = QString("(%1, %2) mm")
-                                            .arg(physicalPos["x"].toDouble(), 0, 'f', 1)
-                                            .arg(physicalPos["y"].toDouble(), 0, 'f', 1);
-                                        QTableWidgetItem *locItem = new QTableWidgetItem(location);
-                                        locItem->setTextAlignment(Qt::AlignCenter);
-                                        defectTable->setItem(i, 3, locItem);
-
-                                        // Size (width × height) in mm
-                                        QString size_str = QString("%1 × %2 mm")
-                                            .arg(physicalPos["width"].toDouble(), 0, 'f', 1)
-                                            .arg(physicalPos["height"].toDouble(), 0, 'f', 1);
-                                        QTableWidgetItem *sizeItem = new QTableWidgetItem(size_str);
-                                        sizeItem->setTextAlignment(Qt::AlignCenter);
-                                        defectTable->setItem(i, 4, sizeItem);
-                                    }
-                                    coordFile.close();
-                                    qDebug() << "Updated defect view with" << defects.size() << "defects";
-                                }
-                            }
+        connect(defectWatcher, &QFileSystemWatcher::directoryChanged,
+                this, [this, surfacePath](const QString &path) {
+                    // Re-add the watch if it was lost
+                    if (!defectWatcher->directories().contains(surfacePath)) {
+                        if (defectWatcher->addPath(surfacePath)) {
+                            qDebug() << "Re-added watch for directory:" << surfacePath;
                         }
                     }
-                };
-                
-                connect(debounceTimer, &QTimer::timeout, this, updateDefectView);
-                debounceTimer->start();
-                
-                // Re-add the path to watch as it might have been removed
-                if (!defectWatcher->directories().contains(surfacePath)) {
-                    if (defectWatcher->addPath(surfacePath)) {
-                        qDebug() << "Re-added watch for directory:" << surfacePath;
-                    }
-                }
-            });
+                });
         
-        // Open capture window
-        CaptureWindow captureWindow(this, surfacePath,
-                                  currentCaptureSettings.imagesInX,
-                                  currentCaptureSettings.imagesInY,
-                                  currentCaptureSettings.sequence);
+        // Open capture window with A4 parameter
+        MotorizedCaptureWindow captureWindow(this, surfacePath,
+                                           currentCaptureSettings.imagesInX,
+                                           currentCaptureSettings.imagesInY,
+                                           currentCaptureSettings.sequence,
+                                           isA4);  // Pass isA4 parameter
         
         // Connect signals for real-time updates
         QTreeWidgetItem* captureItem = surfaceItem;  // Create a copy for the lambda
-        connect(&captureWindow, &CaptureWindow::imageCaptured,
+        connect(&captureWindow, &MotorizedCaptureWindow::imageCaptured,
                 [this, captureItem](const QString &imagePath) {
                     // Add image to tree immediately
                     QFileInfo fileInfo(imagePath);
@@ -863,6 +785,9 @@ void MainWindow::onAddNewSurface()
                                  dimensions.actualWidth,
                                  dimensions.actualHeight);
 
+            // Start stitching immediately
+            currentStitcher->stitchImages();
+
             // Connect stitching completion signal
             connect(currentStitcher, &ImageStitcher::finished, this, [this, surfacePath]() {
                 qDebug() << "Stitching complete signal received for:" << surfacePath;
@@ -890,6 +815,9 @@ void MainWindow::onAddNewSurface()
                                     Qt::FastTransformation);
                                 originalImageLabel->setPixmap(scaledPixmap);
                                 qDebug() << "Successfully updated stitched image preview";
+
+                                // Label defects after stitching
+                                currentStitcher->labelDefects();
                             } else {
                                 qDebug() << "Failed to load stitched image pixmap";
                                 originalImageLabel->setText("Failed to load stitched image");
@@ -905,20 +833,6 @@ void MainWindow::onAddNewSurface()
                 delete currentStitcher;
                 currentStitcher = nullptr;
             });
-
-            // Start stitching process
-            qDebug() << "Starting image stitching process for:" << surfacePath;
-            currentStitcher->stitchImages();
-        }
-        else
-        {
-            // If capture was cancelled, remove the surface item and cleanup watcher
-            delete surfaceItem;
-            if (defectWatcher) {
-                disconnect(defectWatcher, nullptr, this, nullptr);
-                delete defectWatcher;
-                defectWatcher = nullptr;
-            }
         }
     }
 }

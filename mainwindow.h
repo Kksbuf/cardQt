@@ -13,7 +13,7 @@
 #include <QMessageBox>
 #include <QTextEdit>
 #include <QFileSystemWatcher>
-#include "capturesettingsdialog.h"
+#include "motorizedcapturesettingsdialog.h"
 #include "capturewindow.h"
 #include "defectdetector.h"
 #include "imagestitcher.h"

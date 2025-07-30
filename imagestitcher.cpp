@@ -25,7 +25,7 @@ ImageStitcher::ImageStitcher(const QString &surfacePath,
 bool ImageStitcher::stitchImages()
 {
     // Calculate canvas size maintaining aspect ratio
-    const int baseWidth = 2910;  // 3 * 970 for 3x3 grid
+    const int baseWidth = 4400;  // 3 * 970 for 3x3 grid
     const double aspectRatio = actualWidth / actualHeight;
     const int canvasWidth = baseWidth;
     const int canvasHeight = static_cast<int>(baseWidth / aspectRatio);
@@ -70,8 +70,8 @@ bool ImageStitcher::stitchImages()
 
 QImage ImageStitcher::cropCenterRegion(const QImage &source)
 {
-    const int cropWidth = 970;
-    const int cropHeight = 686;
+    const int cropWidth = 1100;
+    const int cropHeight = 778;
     
     // Calculate center position
     int x = (source.width() - cropWidth) / 2;
@@ -111,6 +111,10 @@ QPoint ImageStitcher::getImagePosition(int sequencePosition, int canvasWidth, in
 
 void ImageStitcher::labelDefects()
 {
+
+    const int cropWidth = 1100;
+    const int cropHeight = 778;
+
     // Load the stitched image
     QString stitchedPath = QString("%1/stitched.jpg").arg(surfacePath);
     QImage stitchedImage(stitchedPath);
@@ -138,8 +142,8 @@ void ImageStitcher::labelDefects()
 
         // Get grid position for this sequence number
         auto pos = seqToPos[i + 1]; // sequence is 1-based
-        int gridX = pos.first * 970;
-        int gridY = pos.second * 686;
+        int gridX = pos.first * cropWidth;
+        int gridY = pos.second * cropHeight;
 
         // Load and process detections
         QFile file(detectionPath);
@@ -159,8 +163,8 @@ void ImageStitcher::labelDefects()
                 float orig_h = detection["height"].toDouble();
 
                 // Transform coordinates to canvas position
-                float canvas_x = gridX + (orig_x - (1920 - 970) / 2);
-                float canvas_y = gridY + (orig_y - (1080 - 686) / 2);
+                float canvas_x = gridX + (orig_x - (1920 - cropWidth) / 2);
+                float canvas_y = gridY + (orig_y - (1080 - cropHeight) / 2);
 
                 // Set color based on defect type
                 QColor color;
