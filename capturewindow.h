@@ -61,7 +61,8 @@ private:
     int currentCaptureIndex;
     QImage lastFrame;
     
-    const QString cameraUrl = "http://192.168.0.4:8080/shot.jpg";
+    // TODO: Change camera url
+    const QString cameraUrl = "http://192.168.0.7:8080/shot.jpg";
     const int referenceBoxWidth = 970;
     const int referenceBoxHeight = 686;
     bool cameraConnected;
